@@ -4,8 +4,10 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
+    "start": "node server.js",
     "seed:admin": "node scripts/createAdmin.js",
-  "seed:user": "node scripts/createUser.js"
+    "seed:user": "node scripts/createUser.js",
+    "postinstall": "npm run seed:admin && npm run seed:user"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
