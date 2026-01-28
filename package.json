@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed:admin": "node scripts/createAdmin.js",
+  "seed:user": "node scripts/createUser.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
