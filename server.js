@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Configure CORS
 app.use(cors({
-  origin: "http://localhost:3000", // React frontend
+  origin: "https://front-7xrl.onrender.com", // React frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // allowed HTTP methods
   allowedHeaders: ["Content-Type", "Authorization"], // allowed headers
   credentials: true
