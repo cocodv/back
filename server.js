@@ -21,8 +21,10 @@ app.use(express.json());
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", // dev frontend
-      "https://front-7xrl.onrender.com" // deployed frontend
+      "http://localhost:3000",
+      "https://front-7xrl.onrender.com",
+      "https://manchestercreditunion.online",
+      "https://www.manchestercreditunion.online"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
