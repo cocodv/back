@@ -41,36 +41,48 @@ router.get("/statement", async (req, res) => {
 
     // ---------------- HEADER BAR ----------------
     doc.rect(0, 0, doc.page.width, 90).fill("#0f2a44");
-    doc.fillColor("white").fontSize(22).text("Credit Union Bank", 40, 30);
-    doc.fontSize(11).text("Official Account Statement", 40, 60);
+
+    doc
+      .fillColor("white")
+      .fontSize(24)
+      .text("Manchester Credit Union Bank", 0, 30, { align: "center" });
+
+    doc
+      .fontSize(12)
+      .text("Official Account Statement", 0, 60, { align: "center" });
 
     doc.moveDown(3);
     doc.fillColor("#000");
 
     // ---------------- ACCOUNT CARD ----------------
-    doc.roundedRect(40, 110, 520, 80, 8).fill("#f3f6fb");
+    doc.roundedRect(40, 110, 520, 95, 8).fill("#f3f6fb");
     doc.fillColor("#000").fontSize(11);
 
-    doc.text(`Account Name: ${user.username}`, 55, 130);
-    doc.text(`Statement Period: ${start} to ${end}`, 55, 150);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 360, 130);
+    doc.text("Account Name: Miss Lena Willems", 55, 130);
+    doc.text("Address:", 55, 150);
+    doc.text("2 Maybury Street, Gorton M18 8GP, United Kingdom", 55, 165, {
+      width: 460,
+    });
 
-    doc.moveDown(6);
+    doc.text(`Statement Period: ${start} to ${end}`, 360, 130);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 360, 150);
+
+    doc.moveDown(7);
 
     // ---------------- TABLE HEADER ----------------
-    let tableTop = 220;
+    let tableTop = 235;
     let y = tableTop;
 
-    doc.rect(40, y, 520, 25).fill("#1f4fd8");
+    doc.rect(40, y, 520, 26).fill("#1f4fd8");
     doc.fillColor("white").font("Helvetica-Bold").fontSize(11);
 
-    doc.text("Date", 45, y + 7, { width: 80 });
-    doc.text("Description", 130, y + 7, { width: 180 });
-    doc.text("Debit", 320, y + 7, { width: 70, align: "right" });
-    doc.text("Credit", 400, y + 7, { width: 70, align: "right" });
-    doc.text("Balance", 480, y + 7, { width: 70, align: "right" });
+    doc.text("Date", 45, y + 8, { width: 80 });
+    doc.text("Description", 130, y + 8, { width: 250 });
+    doc.text("Debit", 385, y + 8, { width: 60, align: "right" });
+    doc.text("Credit", 455, y + 8, { width: 60, align: "right" });
+    doc.text("Balance", 520, y + 8, { width: 60, align: "right" });
 
-    y += 25;
+    y += 26;
     doc.font("Helvetica");
 
     let balance = user.balance || 0;
@@ -84,7 +96,7 @@ router.get("/statement", async (req, res) => {
       }
 
       const bg = row % 2 === 0 ? "#ffffff" : "#f3f6fb";
-      doc.rect(40, y, 520, 22).fill(bg);
+      doc.rect(40, y, 520, 24).fill(bg);
 
       let debit = "";
       let credit = "";
@@ -100,22 +112,23 @@ router.get("/statement", async (req, res) => {
       }
 
       doc.fillColor("#000");
-      doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 6, { width: 80 });
-      doc.text(tx.description || tx.type, 130, y + 6, { width: 180 });
-      doc.text(debit, 320, y + 6, { width: 70, align: "right" });
-      doc.text(credit, 400, y + 6, { width: 70, align: "right" });
-      doc.text(`£${balance.toFixed(2)}`, 480, y + 6, { width: 70, align: "right" });
+      doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 7, { width: 80 });
 
-      y += 22;
+      doc.text(tx.description || tx.type, 130, y + 7, {
+        width: 250,
+        lineBreak: true,
+      });
+
+      doc.text(debit, 385, y + 7, { width: 60, align: "right" });
+      doc.text(credit, 455, y + 7, { width: 60, align: "right" });
+      doc.text(`£${balance.toFixed(2)}`, 520, y + 7, {
+        width: 60,
+        align: "right",
+      });
+
+      y += 24;
       row++;
     });
-
-    // ---------------- FOOTER ----------------
-    doc.moveDown(2);
-    doc.fontSize(9).fillColor("gray").text(
-      "This statement is generated electronically and is valid without signature.",
-      { align: "center" }
-    );
 
     doc.end();
 
