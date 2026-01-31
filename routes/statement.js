@@ -56,14 +56,15 @@ router.get("/statement", async (req, res) => {
     doc.roundedRect(40, 110, 520, 95, 8).fill("#f3f6fb");
     doc.fillColor("#000").fontSize(11);
 
-    doc.text("Account Name: Miss Lena Willems", 55, 130);
-    doc.text("Address:", 55, 150);
-    doc.text("2 Maybury Street, Gorton M18 8GP, United Kingdom", 55, 165, {
-      width: 460,
-    });
+    // Left block (name + address)
+    doc.text("Miss Lena Willems", 55, 130);
+    doc.text("2 Maybury Street", 55, 148);
+    doc.text("Gorton M18 8GP", 55, 166);
+    doc.text("United Kingdom", 55, 184);
 
-    doc.text(`Statement Period: ${start} to ${end}`, 360, 130);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 360, 150);
+    // Right block (period + generated)
+    doc.text(`Statement Period: ${start} to ${end}`, 340, 130);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 340, 160);
 
     // ---------------- TABLE HEADER ----------------
     let tableTop = 235;
