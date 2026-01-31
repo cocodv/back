@@ -44,7 +44,7 @@ router.get("/statement", async (req, res) => {
 
     doc.fillColor("white")
       .fontSize(24)
-      .text("Credit Union Bank", 0, 30, { align: "center" });
+      .text("Credit Union Bank", 0, 28, { align: "center" });
 
     doc.fontSize(12)
       .text("Official Account Statement", 0, 60, { align: "center" });
@@ -73,10 +73,10 @@ router.get("/statement", async (req, res) => {
     doc.fillColor("white").font("Helvetica-Bold").fontSize(11);
 
     doc.text("Date", 45, y + 8, { width: 70 });
-    doc.text("Description", 120, y + 8, { width: 220 });
-    doc.text("Debit", 350, y + 8, { width: 60, align: "right" });
-    doc.text("Credit", 420, y + 8, { width: 60, align: "right" });
-    doc.text("Balance", 490, y + 8, { width: 65, align: "right" });
+    doc.text("Description", 120, y + 8, { width: 210 });
+    doc.text("Debit", 335, y + 8, { width: 75, align: "right" });
+    doc.text("Credit", 415, y + 8, { width: 75, align: "right" });
+    doc.text("Balance", 495, y + 8, { width: 65, align: "right" });
 
     y += 26;
     doc.font("Helvetica");
@@ -118,13 +118,13 @@ router.get("/statement", async (req, res) => {
       doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 7, { width: 70 });
 
       doc.text(tx.description || tx.type || "Transaction", 120, y + 7, {
-        width: 220,
+        width: 210,
         lineBreak: true,
       });
 
-      doc.text(debit, 350, y + 7, { width: 60, align: "right" });
-      doc.text(credit, 420, y + 7, { width: 60, align: "right" });
-      doc.text(formatMoney(balance), 490, y + 7, {
+      doc.text(debit, 335, y + 7, { width: 75, align: "right" });
+      doc.text(credit, 415, y + 7, { width: 75, align: "right" });
+      doc.text(formatMoney(balance), 495, y + 7, {
         width: 65,
         align: "right",
       });
