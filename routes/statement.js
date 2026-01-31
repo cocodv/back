@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const PDFDocument = require("pdfkit");
@@ -6,7 +5,6 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 
-// Use existing mongoose connection
 const User = mongoose.model("User");
 const Transaction = mongoose.model("Transaction");
 
@@ -14,24 +12,13 @@ router.get("/statement", async (req, res) => {
   try {
     let { user_id, start, end } = req.query;
 
-    console.log("STATEMENT REQUEST:", { user_id, start, end });
+    if (!user_id) return res.status(400).json({ error: "user_id missing" });
+    if (!start || !end) return res.status(400).json({ error: "start or end date missing" });
+    if (!mongoose.Types.ObjectId.isValid(user_id)) return res.status(400).json({ error: "Invalid user id" });
 
-    if (!user_id) {
-      return res.status(400).json({ error: "user_id missing" });
-    }
-
-    if (!start || !end) {
-      return res.status(400).json({ error: "start or end date missing" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(user_id)) {
-      return res.status(400).json({ error: "Invalid user id" });
-    }
-
-    // Dates
     const startDate = new Date(start);
     const endDate = new Date(end);
-    endDate.setHours(23, 59, 59, 999); // include today fully
+    endDate.setHours(23, 59, 59, 999);
 
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -41,7 +28,6 @@ router.get("/statement", async (req, res) => {
       created_at: { $gte: startDate, $lte: endDate },
     }).sort({ created_at: 1 });
 
-    // ---------------- PDF SETUP ----------------
     const fileName = `statement_${user.username}_${start}_to_${end}.pdf`;
     const filePath = path.join(__dirname, "..", "tmp", fileName);
 
@@ -53,87 +39,97 @@ router.get("/statement", async (req, res) => {
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // -------- HEADER --------
-    doc.fillColor("#1f4fd8");
-    doc.fontSize(22).text("Credit Union Bank Statement", { align: "center" });
-    doc.moveDown();
+    // ---------------- HEADER BAR ----------------
+    doc.rect(0, 0, doc.page.width, 90).fill("#0f2a44");
+    doc.fillColor("white").fontSize(22).text("Credit Union Bank", 40, 30);
+    doc.fontSize(11).text("Official Account Statement", 40, 60);
 
-    // Account block (BLUE)
-    doc.fontSize(14).text("Miss Lena Willems");
-    doc.fontSize(11).text("2 Maybury Street");
-    doc.text("Gorton M18 8GP");
-    doc.text("United Kingdom");
-    doc.moveDown();
+    doc.moveDown(3);
+    doc.fillColor("#000");
 
-    doc.fillColor("black");
-    doc.fontSize(11).text(`Statement Period: ${start} to ${end}`);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`);
-    doc.moveDown(2);
+    // ---------------- ACCOUNT CARD ----------------
+    doc.roundedRect(40, 110, 520, 80, 8).fill("#f3f6fb");
+    doc.fillColor("#000").fontSize(11);
 
-    // -------- TABLE HEADER --------
-    const headerY = doc.y;
-    doc.font("Helvetica-Bold");
+    doc.text(`Account Name: ${user.username}`, 55, 130);
+    doc.text(`Statement Period: ${start} to ${end}`, 55, 150);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 360, 130);
 
-    doc.text("Date", 40, headerY, { width: 90 });
-    doc.text("Description", 130, headerY, { width: 220 });
-    doc.text("Debit", 360, headerY, { width: 80, align: "right" });
-    doc.text("Credit", 450, headerY, { width: 80, align: "right" });
+    doc.moveDown(6);
 
-    doc.moveDown();
+    // ---------------- TABLE HEADER ----------------
+    let tableTop = 220;
+    let y = tableTop;
+
+    doc.rect(40, y, 520, 25).fill("#1f4fd8");
+    doc.fillColor("white").font("Helvetica-Bold").fontSize(11);
+
+    doc.text("Date", 45, y + 7, { width: 80 });
+    doc.text("Description", 130, y + 7, { width: 180 });
+    doc.text("Debit", 320, y + 7, { width: 70, align: "right" });
+    doc.text("Credit", 400, y + 7, { width: 70, align: "right" });
+    doc.text("Balance", 480, y + 7, { width: 70, align: "right" });
+
+    y += 25;
     doc.font("Helvetica");
 
-    let y = doc.y;
+    let balance = user.balance || 0;
+    let row = 0;
 
-    if (!txs.length) {
-      doc.text("No transactions for this period.", 40, y);
-    }
-
-    // -------- ROWS --------
+    // ---------------- ROWS ----------------
     txs.forEach((tx) => {
-      if (y > 750) {
+      if (y > 740) {
         doc.addPage();
-        y = 40;
+        y = 60;
       }
 
-      const date = new Date(tx.created_at).toLocaleDateString();
-      const desc = tx.description || tx.type || "Transaction";
+      const bg = row % 2 === 0 ? "#ffffff" : "#f3f6fb";
+      doc.rect(40, y, 520, 22).fill(bg);
 
       let debit = "";
       let credit = "";
 
       if (tx.type === "debit") {
-        debit = `£${Number(tx.amount).toFixed(2)}`;
+        balance -= tx.amount;
+        debit = `£${tx.amount.toFixed(2)}`;
       }
 
       if (tx.type === "credit") {
-        credit = `£${Number(tx.amount).toFixed(2)}`;
+        balance += tx.amount;
+        credit = `£${tx.amount.toFixed(2)}`;
       }
 
-      doc.text(date, 40, y, { width: 90 });
-      doc.text(desc, 130, y, { width: 220 });
-      doc.text(debit, 360, y, { width: 80, align: "right" });
-      doc.text(credit, 450, y, { width: 80, align: "right" });
+      doc.fillColor("#000");
+      doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 6, { width: 80 });
+      doc.text(tx.description || tx.type, 130, y + 6, { width: 180 });
+      doc.text(debit, 320, y + 6, { width: 70, align: "right" });
+      doc.text(credit, 400, y + 6, { width: 70, align: "right" });
+      doc.text(`£${balance.toFixed(2)}`, 480, y + 6, { width: 70, align: "right" });
 
       y += 22;
+      row++;
     });
+
+    // ---------------- FOOTER ----------------
+    doc.moveDown(2);
+    doc.fontSize(9).fillColor("gray").text(
+      "This statement is generated electronically and is valid without signature.",
+      { align: "center" }
+    );
 
     doc.end();
 
     stream.on("finish", () => {
-      res.download(filePath, fileName, (err) => {
-        if (err) console.error(err);
-        fs.unlinkSync(filePath);
-      });
+      res.download(filePath, fileName, () => fs.unlinkSync(filePath));
     });
 
   } catch (err) {
-    console.error("STATEMENT ERROR:", err);
+    console.error(err);
     res.status(500).json({ error: "Failed to generate statement" });
   }
 });
 
 module.exports = router;
-
 
 
 
