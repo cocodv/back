@@ -44,7 +44,7 @@ router.get("/statement", async (req, res) => {
 
     doc.fillColor("white")
       .fontSize(24)
-      .text("Credit Union Bank", 0, 28, { align: "center" });
+      .text("Manchester Credit Union ", 0, 28, { align: "center" });
 
     doc.fontSize(12)
       .text("Official Account Statement", 0, 60, { align: "center" });
