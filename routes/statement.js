@@ -39,16 +39,14 @@ router.get("/statement", async (req, res) => {
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // ---------------- HEADER BAR ----------------
+    // ---------------- HEADER ----------------
     doc.rect(0, 0, doc.page.width, 90).fill("#0f2a44");
 
-    doc
-      .fillColor("white")
+    doc.fillColor("white")
       .fontSize(24)
-      .text("Manchester Credit Union Bank", 0, 30, { align: "center" });
+      .text("Credit Union Bank", 0, 30, { align: "center" });
 
-    doc
-      .fontSize(12)
+    doc.fontSize(12)
       .text("Official Account Statement", 0, 60, { align: "center" });
 
     doc.moveDown(3);
@@ -67,8 +65,6 @@ router.get("/statement", async (req, res) => {
     doc.text(`Statement Period: ${start} to ${end}`, 360, 130);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 360, 150);
 
-    doc.moveDown(7);
-
     // ---------------- TABLE HEADER ----------------
     let tableTop = 235;
     let y = tableTop;
@@ -76,17 +72,23 @@ router.get("/statement", async (req, res) => {
     doc.rect(40, y, 520, 26).fill("#1f4fd8");
     doc.fillColor("white").font("Helvetica-Bold").fontSize(11);
 
-    doc.text("Date", 45, y + 8, { width: 80 });
-    doc.text("Description", 130, y + 8, { width: 250 });
-    doc.text("Debit", 385, y + 8, { width: 60, align: "right" });
-    doc.text("Credit", 455, y + 8, { width: 60, align: "right" });
-    doc.text("Balance", 520, y + 8, { width: 60, align: "right" });
+    doc.text("Date", 45, y + 8, { width: 70 });
+    doc.text("Description", 120, y + 8, { width: 220 });
+    doc.text("Debit", 350, y + 8, { width: 60, align: "right" });
+    doc.text("Credit", 420, y + 8, { width: 60, align: "right" });
+    doc.text("Balance", 490, y + 8, { width: 65, align: "right" });
 
     y += 26;
     doc.font("Helvetica");
 
-    let balance = user.balance || 0;
+    let balance = 0;
     let row = 0;
+
+    const formatMoney = (amount) =>
+      "£" + Number(amount).toLocaleString("en-GB", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
     // ---------------- ROWS ----------------
     txs.forEach((tx) => {
@@ -103,26 +105,27 @@ router.get("/statement", async (req, res) => {
 
       if (tx.type === "debit") {
         balance -= tx.amount;
-        debit = `£${tx.amount.toFixed(2)}`;
+        debit = formatMoney(tx.amount);
       }
 
       if (tx.type === "credit") {
         balance += tx.amount;
-        credit = `£${tx.amount.toFixed(2)}`;
+        credit = formatMoney(tx.amount);
       }
 
       doc.fillColor("#000");
-      doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 7, { width: 80 });
 
-      doc.text(tx.description || tx.type, 130, y + 7, {
-        width: 250,
+      doc.text(new Date(tx.created_at).toLocaleDateString(), 45, y + 7, { width: 70 });
+
+      doc.text(tx.description || tx.type || "Transaction", 120, y + 7, {
+        width: 220,
         lineBreak: true,
       });
 
-      doc.text(debit, 385, y + 7, { width: 60, align: "right" });
-      doc.text(credit, 455, y + 7, { width: 60, align: "right" });
-      doc.text(`£${balance.toFixed(2)}`, 520, y + 7, {
-        width: 60,
+      doc.text(debit, 350, y + 7, { width: 60, align: "right" });
+      doc.text(credit, 420, y + 7, { width: 60, align: "right" });
+      doc.text(formatMoney(balance), 490, y + 7, {
+        width: 65,
         align: "right",
       });
 
@@ -137,12 +140,13 @@ router.get("/statement", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("STATEMENT ERROR:", err);
     res.status(500).json({ error: "Failed to generate statement" });
   }
 });
 
 module.exports = router;
+
 
 
 
